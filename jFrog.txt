@@ -18,3 +18,7 @@
 -> Give the password: enter the new password you created on jFog UI
 -> And for the ID & Description enter: jfrog
 -> Click on Create.
+
+
+
+# Youtube Video Link for Tutorial: https://youtu.be/E_ZoNZKNsvU?si=8vqpSb1jjXddDuap

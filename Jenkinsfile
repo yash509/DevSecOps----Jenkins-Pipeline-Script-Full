@@ -13,9 +13,45 @@ pipeline {
             steps {
                 cleanWs()
             }
-        }                                                     //  Repository URL need to be updated here
-        stage('Checkout from Git') {                          //                    |
-            steps {                                           //                    |
+        } 
+        stage('Test Build') {
+            steps {
+                echo 'Building....'
+            }
+            post {
+                always {
+                    jiraSendBuildInfo site: 'clouddevopshunter.atlassian.net'
+                }
+            }
+        }
+        stage('Deploy - Staging') {
+            when {
+                branch 'master'
+            }
+            steps {
+                echo 'Deploying to Staging from master....'
+            }
+            post {
+                always {
+                    jiraSendDeploymentInfo environmentId: 'us-stg-1', environmentName: 'us-stg-1', environmentType: 'staging'
+                }
+            }
+        }
+        stage('Deploy - Production') {
+            when {
+                branch 'master'
+            }
+            steps {
+                echo 'Deploying to Production from master....'
+            }
+            post {
+                always {
+                    jiraSendDeploymentInfo environmentId: 'us-prod-1', environmentName: 'us-prod-1', environmentType: 'production'
+                }
+            }
+        }                                                   
+        stage('Checkout from Git') {                         //  Repository URL need to be updated here
+            steps {                                         //                    |
                 git branch: 'main', url: 'https://github.com/yash509/DevSecOps-Project----Animal-Farm-Deployment.git'
             }
         }
@@ -58,6 +94,47 @@ pipeline {
             steps {
                 dependencyCheck additionalArguments: '--scan ./ --disableYarnAudit --disableNodeAudit', odcInstallation: 'DP-Check'
                 dependencyCheckPublisher pattern: '**/dependency-check-report.xml'
+            }
+        }
+        stage ('Artifactory configuration') {
+            steps {
+                rtServer (
+                    id: "jfrog-server",
+                    url: "http://13.201.137.77:8082/artifactory", // -- This nedd to be changed
+                    credentialsId: "jfrog"
+                )
+
+                rtMavenDeployer (
+                    id: "MAVEN_DEPLOYER",
+                    serverId: "jfrog-server",
+                    releaseRepo: "libs-release-local",
+                    snapshotRepo: "libs-snapshot-local"
+                )
+
+                rtMavenResolver (
+                    id: "MAVEN_RESOLVER",
+                    serverId: "jfrog-server",
+                    releaseRepo: "libs-release",
+                    snapshotRepo: "libs-snapshot"
+                )
+            }
+        }
+        stage ('Deploy Artifacts') {
+            steps {
+                rtMavenRun (
+                    tool: "maven", 
+                    pom: 'webapp/pom.xml',
+                    goals: 'clean install',
+                    deployerId: "MAVEN_DEPLOYER",
+                    resolverId: "MAVEN_RESOLVER"
+                )
+            }
+        }
+        stage ('Publish build info') {
+            steps {
+                rtPublishBuildInfo (
+                    serverId: "jfrog-server"
+             )
             }
         }
         stage('TRIVY FS SCAN') {

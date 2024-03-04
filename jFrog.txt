@@ -1,0 +1,20 @@
+# Commands to Install jFrog on the server
+
+1. sudo mkdir -p $JFROG_HOME/artifactory/var/etc/
+2. cd $JFROG_HOME/artifactory/var/etc/
+3. sudo touch ./system.yaml
+4. sudo chown -R 1030:1030 $JFROG_HOME/artifactory/var
+5. docker run --name artifactory -v $JFROG_HOME/artifactory/var/:/var/opt/jfrog/artifactory -d -p 8081:8081 -p 8082:8082 releases-docker.jfrog.io/jfrog/artifactory-oss:latest
+
+
+# and Enable Port 8082 on server for jFrog and access on browser using http://public-ip-address:8082/ui/
+# default username: admin 
+# default password: password
+
+# Select ""Maven"" for repository creation
+
+# Then go to Jenkins, create new credentials for jFrog:
+-> Give the username: admin
+-> Give the password: enter the new password you created on jFog UI
+-> And for the ID & Description enter: jfrog
+-> Click on Create.

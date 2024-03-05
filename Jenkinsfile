@@ -158,17 +158,6 @@ pipeline {
                 sh "trivy image yash5090/animal-farm:latest > trivyimage.txt"  // -- Docker image Name to be update here 
             }
         }
-        stage('Manual Approval') {
-          timeout(time: 10, unit: 'MINUTES') {
-            mail to: 'postbox.aj99@gmail.com', // -- E-mail to be updated here 
-              subject: "${currentBuild.result} CI: ${env.JOB_NAME}",
-              body: "Project: ${env.JOB_NAME}\nBuild Number: ${env.BUILD_NUMBER}\nGo to ${env.BUILD_URL} and approve deployment"
-            input message: "Deploy ${params.project_name}?", 
-              id: "DeployGate", 
-              submitter: "approver", 
-              parameters: [choice(name: 'action', choices: ['Deploy'], description: 'Approve deployment')]
-          }
-        }
         stage('Deploy to container'){
             steps{
                 sh 'docker run -d --name farm -p 5000:5000 yash5090/animal-farm:latest' // -- Docker image Name to be update here
@@ -197,3 +186,15 @@ pipeline {
         }
     }
 }
+
+stage('Manual Approval') {
+          timeout(time: 10, unit: 'MINUTES') {
+            mail to: 'postbox.aj99@gmail.com', // -- E-mail to be updated here 
+              subject: "${currentBuild.result} CI: ${env.JOB_NAME}",
+              body: "Project: ${env.JOB_NAME}\nBuild Number: ${env.BUILD_NUMBER}\nGo to ${env.BUILD_URL} and approve deployment"
+            input message: "Deploy ${params.project_name}?", 
+              id: "DeployGate", 
+              submitter: "approver", 
+              parameters: [choice(name: 'action', choices: ['Deploy'], description: 'Approve deployment')]
+          }
+        }

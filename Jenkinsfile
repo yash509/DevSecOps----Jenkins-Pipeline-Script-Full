@@ -158,6 +158,32 @@ pipeline {
                 sh "trivy image yash5090/animal-farm:latest > trivyimage.txt"  // -- Docker image Name to be update here 
             }
         }
+        stage ('Manual Approval'){
+          steps {
+           script {
+             timeout(time: 10, unit: 'MINUTES') {
+              approvalMailContent = """
+              Project: ${env.JOB_NAME}
+              Build Number: ${env.BUILD_NUMBER}
+              Go to build URL and approve the deployment request.
+              URL de build: ${env.BUILD_URL}
+              """
+             mail(
+             to: 'postbox.aj99@gmail.com', // mail change here
+             subject: "${currentBuild.result} CI: Project name -> ${env.JOB_NAME}", 
+             body: approvalMailContent,
+             mimeType: 'text/plain'
+             )
+            input(
+            id: "DeployGate",
+            message: "Deploy ${params.project_name}?",
+            submitter: "approver",
+            parameters: [choice(name: 'action', choices: ['Deploy'], description: 'Approve deployment')]
+            )  
+          }
+         }
+       }
+    }
         stage('Deploy to container'){
             steps{
                 sh 'docker run -d --name farm -p 5000:5000 yash5090/animal-farm:latest' // -- Docker image Name to be update here

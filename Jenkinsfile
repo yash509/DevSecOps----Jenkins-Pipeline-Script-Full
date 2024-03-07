@@ -13,7 +13,21 @@ pipeline {
             steps {
                 cleanWs()
             }
-        } 
+        }
+        stage('deployments') {
+            parallel {
+                stage('deploy to stg') {
+                    steps {
+                        echo 'stg deployment done'
+                    }
+                }
+                stage('deploy to prod') {
+                    steps {
+                        echo 'prod deployment done'
+                    }
+                }
+            }
+        }
         stage('Test Build') {
             steps {
                 echo 'Building....'
